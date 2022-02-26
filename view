@@ -1,0 +1,69 @@
+from ast import Return
+from email import message
+from multiprocessing import context
+from urllib import request
+from django.shortcuts import redirect, render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
+from .models import Contact
+
+def  home(request):
+    message = "Bonjour tout le monde"
+    context = {'message': message}
+    return render(request, "pages/index.html", context)
+
+
+
+
+def  about(request):
+    return render(request, "pages/about.html")
+
+@login_required(login_url="/login/")
+def contact_list(request):
+    user = request.user
+    print("user ", user)
+    Contacts = Contact.objects.filter(auteur=user)
+    return render(request, "contacts/contact_list.html", {"contacts": Contacts})
+    
+
+@login_required(login_url="/login/")
+def contact_details(request, id):
+    contact = get_object_or_404(Contact, id=id)
+    return render(request, "contacts/contact_details.html", {"contact": contact})
+# Create your views here.
+
+@login_required(login_url="/login/")
+def new_contact(request):
+      if request.method == "POST.get":
+        auteur = request.user
+        nom = request.POST['nom']
+        prenom = request.POST.get['prenom']
+        telephone = request.POST.get['telephone']
+        email = request.POST.get['email']
+        contact = Contact.objects.create(
+            auteur=auteur,
+            nom=nom,
+            prenom=prenom,
+            telephone=telephone,
+            email=email
+        )
+        contact.save()
+        return redirect("/contacts/")
+      return render(request, "contacts/new_contact.html")
+
+
+def edit_contact(request, id):
+    contact = get_object_or_404(Contact, id=id)
+    if request.method == "POST.get":
+        nom = request.POST['nom']
+        prenom = request.POST.get['prenom']
+        telephone = request.POST.get['telephone']
+        email = request.POST.get['email']
+        contact_to_update = Contact.objects.filter(pk=contact.id)
+        contact_to_update.update(
+            nom=nom,
+            prenom=prenom,
+            telephone=telephone,
+            email=email)
+        return redirect("/contacts/")
+    return render(request, "contacts/edit_contact.html", {"contact": contact})
